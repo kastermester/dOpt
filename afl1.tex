@@ -1,0 +1,80 @@
+\documentclass{report}
+
+\newenvironment{eq}[0]{
+	\begin{equation}
+	\begin{aligned}
+}{
+	\end{aligned}
+	\end{equation}
+}
+\newenvironment{eq*}[0]{
+	\begin{equation*}
+	\begin{aligned}
+}{
+	\end{aligned}
+	\end{equation*}
+}
+\usepackage{mathtools}
+\usepackage{amssymb}
+
+\author{Kaare Hoff Skovgaard (20092804)}
+\title{Handin 1 - Optimization F14}
+
+
+\begin{document}
+	\maketitle
+	\section*{Tournament problem}
+	The problem domain is a handball league consisting of $1, 2, ..., N$ teams (set denoted by $T$). When the league is in the middle of the season, after having played the first games of the season, the standings will be given by $L_1$ - that is the points each team has acquired by playing the first games of the season. Given by $L_2$ is a list of games (set of teams) left to be played. Every game is played by two teams, where the winning team will receive $2$ points and the loosing team will receive $0$ points. In the case of a draw, each team will receive $1$ point. With this as input, find out whether a specific team, our \emph{favorite} (let's call this team $f$ where $0 < f \leq N$) has a chance at winning the league, that is ending the league with at least one more point than any other team.
+
+	\section*{Proposed solution}
+	To solve this tournament problem - here is proposed a solution that will ultimatively solve this using a flow network. In order to model the problem as a flow network, a bit of preprocessing is needed for this solution. This should run using $O(L_2+L_1)$ time.
+
+	What is needed is knowing for every team, that is not the favorite, how many points they are able to acquire during the rest of the league while the favorite can still win, $L_3$. We can find this quite easily by first scanning through $L_2$ and find every game that the favorite is participating in and by assuming a win, we can easily see that this yields two points per game. We can define this number $p_f^{L_2}$ as:
+
+	\begin{eq*}
+	pg_f(g) &= \left\{
+		\begin{array}{llr}
+		2 & if & f \in g \\
+		0 & else &
+		\end{array}
+	\right.\\
+	p_f^{L_2} &= \sum_{g \in L_2} pg_f(g)
+	\end{eq*}
+
+	Defining $p(t)$ as the lookup of team $t$ in $L_1$ we can define $L_3$:
+
+	\begin{eq*}
+	p_{L_3}(t) &= \left\{
+		\begin{array}{llr}
+		\infty & if & t = f \\
+		p(f) - p(t) + p_f^{L_2} - 1 & else &
+		\end{array}
+	\right. \\
+	L_3 &= \left\{ (t, p_{L_3}(t)) | t \in L_1 \right\}
+	\end{eq*}
+
+	We here note that if $\exists t \in T-\{f\} : p_{L_3}(t) < 0$ then the answer can be answered with a simple no.
+
+	\pagebreak
+	Using this we can now define our flow network G(V, E, s, t)\footnote{I here define the edges as (src, dst, capacity). That is the source vertex, destination vertex an the capacity of the vertex.}:
+
+	\begin{eq*}
+	V_t &= \left\{ v_t^i | i \in T \right\} \\
+	V_g &= \left\{ v_g^i | i \in L_2 \right\} \\
+	V &= \left\{s, t\right\} \cup V_t \cup V_g \\
+	E_g &= \left\{ (s, v_g^i, 2) | i \in L_2 \right\} \\
+	E_gt1 &= \left\{ (v_g^i, v^{j_1}_t, 2) | j \in L_2 \wedge j_2 \neq f \right\} \\
+	E_gt2 &= \left\{ (v_g^i, v^{j_2}_t, 2) | j \in L_2 \wedge j_1 \neq f \right\} \\
+	E_t &= \left\{ (v_t^{p_1}, t, p_2) | p \in L_3 \right\} \\
+	E &= E_g \cup E_gt1 \cup E_gt2 \cup E_t
+	\end{eq*}
+
+	In a more informal definition - every team gets its own vertex, and every game gets its own vertex. From the source to every game is an edge, with a capacity of 2. From every game to the two teams that participate in the game is an edge with a capacity of 2 - except for the games where the favorite team is participating, in those games there is only an edge to the favorite team, also with a capacity of 2. From every team to the sink is an edge with the capacity found in $L_3$ - that is either infinity for the favorite team, or the amount of points that the team can win while still allowing the favorite team to win the league.
+
+	With this in place, if we solve the maximum flow problem we can now see that the favorite team can win the league if and only if $f(s, t) = \sum_{e \in L_2} 2$.
+
+	\section*{Argumentation of correctness}
+	We model the points as the flow going through the network. Noting that every game will in some way yield two points distributed amongst the two teams participating. We here see that the games are basicly the source of flow going through the network - and because of this we have an edge from the source to every game, with a capacity of two. As both teams partcipating can at most receive two points per game, we again model this by having edges from the games to the participating teams, each with a capacity of two. The real magic happens with the edges from the teams to the sink. In the games where the favorite team is participating the edges going to the opposing team have been removed, this ensures that in the flow network the favorite team will stand to gain $p_f^{L_2}$ points. By the capacity constraints put on the edges going from every other team to the sink, it has been ensured that no team will get enough points by the flow network to win the league (assuming the favorite gains $p_f^{L_2}$ points). This means that as long as every point from every game goes through the flow network, the favorite team can win the league.
+
+	It is important to note that every edge has a capacity that belongs to $\mathbb{Z}$\footnote{If one has stopped solving the problem when $\exists t \in T-\{f\} : p_{L_3}(t) < 0$ then the capacities belong to $\mathbb{N}$.} - this means that by the integral theorem the flow going through every edge will also belong to $\mathbb{Z}$. The importance of this becomes clear when it needs to be considered whether every outcome of a game has been correctly modeled. We note that for every game either a single team receives two points (and thereby the other team receives zero points) - or they each receive one point. Due to the integral theorem it should be easily seen that this is true in our model as well.
+\end{document}
