@@ -16,8 +16,7 @@
 }
 \usepackage{mathtools}
 \usepackage{amssymb}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.8}
+\usepackage{graphicx}
 \newcommand*\rfrac[2]{{}^{#1}\!/_{#2}}
 
 \author{Kaare Hoff Skovgaard (20092804)}
@@ -26,6 +25,8 @@
 
 \begin{document}
 	\maketitle
+
+	By simply reading and understanding the problem given, quickly it is seen that the linear program is:
 
 	Maximize:
 	\begin{eq*}
@@ -38,14 +39,21 @@
 		x_1 + \rfrac{1}{4} x_2 &\leq 4
 	\end{eq*}
 
-	\begin{tikzpicture}
-		\begin{axis}[
-			xlabel=$x_1$,
-			ylabel=$x_2$,
-			ymin=0,
-			xmin=0
-		]
-		\addplot {-2*x-40};
-		\end{axis}
-	\end{tikzpicture}
+	Which can then be seen graphically below:
+
+	\begin{figure}[ht!]
+		\centering
+		\includegraphics[width=90mm]{afl2_graph.png}
+		\caption{A simple graph showing the solution. The white area is the feasible solution area}
+		\label{fig:graph}
+	\end{figure}
+
+	By solving the equations we can find the points of intersections, the intersection points that are marked in Figure \ref{fig:graph} are:
+
+	\begin{enumerate}
+		\item[Blue dot] $x_1 = \rfrac{4}{3}, x_2 = \rfrac{32}{3}$
+		\item[Red dot] $x_1 = \rfrac{16}{7}, x_2 = \rfrac{48}{7}$
+	\end{enumerate}
+
+	Yielding the maximum profit is the blue dot, at $1466 + 2/3$ DKK per week.
 \end{document}
